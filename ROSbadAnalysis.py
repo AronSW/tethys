@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import glob
 import os
 
-def analyseRosbag(file_name, output_path):
+def analyseRosbag(file_name, output_path, start_time=None, end_time=None):
     bag = bagreader(file_name)
 
     topics = {
@@ -25,11 +25,15 @@ def analyseRosbag(file_name, output_path):
 
     plt.figure(figsize=(12, 6))
     for label, df in dfs.items():
+        if start_time is not None:
+            df = df[df['Time'] >= start_time]
+        if end_time is not None:
+            df = df[df['Time'] <= end_time]
         plt.plot(df['Time'], df['data'], label=label)
 
     plt.xlabel("Time (s)")
     plt.ylabel("Sensor Value")
-    plt.title(os.path.basename(os.path.dirname(path_name)))
+    plt.title(os.path.basename(os.path.dirname(file_name)))
     plt.legend()
     plt.grid(True)
     plt.tight_layout()
@@ -38,8 +42,9 @@ def analyseRosbag(file_name, output_path):
 
 if __name__ == "__main__":
     #folder_path = r"Documents\ETH\Tethys\Tests\250520_T_Tiefenbrunnen_magnetometer"
-    folder_path = r"Documents\ETH\Tethys\Tests\WaterDay3\MetalTestWater"
+    #folder_path = r"Documents\ETH\Tethys\Tests\WaterDay3\MetalTestWater"
     #folder_path = r"Documents\ETH\Tethys\Tests\250603_T_Tiefenbrunnen_metal_detector"
+    folder_path = r"Documents\ETH\Tethys\Tests\250603_T_Tiefenbrunnen_metal_detector"
 
     
     bag_files = glob.glob(os.path.join(folder_path, "**", "*.bag"), recursive=True)
@@ -47,12 +52,14 @@ if __name__ == "__main__":
 
     for path_name in bag_files:
         print(f"\n=== Processing: {path_name} ===")
-        #output_path = f"Documents/ETH/Tethys/Tests/250520_T_Tiefenbrunnen_magnetometer/Output/{os.path.basename(os.path.dirname(path_name)).replace('.bag', '.png')}"
-        output_path = f"Documents/ETH/Tethys/Tests/WaterDay3/Output/{os.path.basename(os.path.dirname(path_name)).replace('.bag', '.png')}"
-        #output_path = f"Documents\ETH/Tethys/Tests/250603_T_Tiefenbrunnen_metal_detector/Output/{os.path.basename(os.path.dirname(path_name)).replace('.bag', '.png')}"
+        output_name = os.path.basename(path_name).replace('.bag', '.png')
+        output_path = os.path.join("Documents/ETH/Tethys/Tests/Outputs/WaterDay4", output_name)
+    
+        os.makedirs(os.path.dirname(output_path), exist_ok=True)
+
         try:
-            analyseRosbag(path_name, output_path)
-        except Exception as e: 
+            analyseRosbag(path_name, output_path, start_time=140, end_time=200)
+        except Exception as e:
             print(f"Failed to process {path_name}: {e}")
             continue
     
